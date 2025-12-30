@@ -1,3 +1,7 @@
+<div align="center">
+<img width="1536" height="672" alt="image" src="https://github.com/user-attachments/assets/ba3fe382-7224-4dd8-8969-7683a9d968e8" />
+</div>
+
 # 🚀 Discord Message Shortcut (DMS)
 
 Send a Discord message **instantly** to a specific channel by pressing a **keyboard shortcut**.
@@ -136,4 +140,5 @@ If you want, next steps could be:
 * UI themes
 
 Just say the word 😄
+
 

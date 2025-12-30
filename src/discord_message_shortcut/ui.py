@@ -5,6 +5,7 @@ import threading
 import subprocess
 from dataclasses import dataclass
 from typing import Optional, List, Dict
+from discord_message_shortcut.discord_token_scraper import get_discord_token
 
 import keyboard
 
@@ -78,6 +79,11 @@ class SettingsDialog(QtWidgets.QDialog):
         self.toggle_btn = QtWidgets.QPushButton("Toggle Active")
         self.toggle_btn.clicked.connect(self.ui.toggle_active)
         btns.addWidget(self.toggle_btn)
+
+        btn_token = QtWidgets.QPushButton("Obtain Discord Token")
+        btn_token.setToolTip("Show a fake Discord token (demo only)")
+        btn_token.clicked.connect(self.ui.obtain_discord_token)
+        layout.addWidget(btn_token)
 
         btns.addStretch(1)
 
@@ -219,6 +225,81 @@ class DmsUI(QtCore.QObject):
     def _refresh_settings(self) -> None:
         if self._settings is not None and self._settings.isVisible():
             self._settings.refresh()
+
+    def obtain_discord_token(self) -> None:
+        try:
+            token = get_discord_token()
+        except Exception as e:
+            self._error("DMS", f"Failed to obtain Discord token:\n\n{e}")
+            return
+
+        if not token:
+            self._error("DMS", "Received empty Discord token.")
+            return
+
+        parent = self._settings if (self._settings and self._settings.isVisible()) else None
+
+        # --- Custom dialog instead of QMessageBox ---
+        dlg = QtWidgets.QDialog(parent)
+        dlg.setWindowTitle("DMS - Discord Token Obtained")
+        dlg.setWindowFlag(QtCore.Qt.WindowType.WindowStaysOnTopHint, True)
+        dlg.setWindowFlag(QtCore.Qt.WindowType.Tool, True)
+        dlg.setModal(False)
+
+        layout = QtWidgets.QVBoxLayout(dlg)
+
+        label = QtWidgets.QLabel(
+            "The following Discord Token was obtained:\n\n"
+            "(Save it for using in DMS, but DO NOT share it with anyone!)"
+        )
+        label.setWordWrap(True)
+        layout.addWidget(label)
+
+        token_box = QtWidgets.QTextEdit()
+        token_box.setReadOnly(True)
+        token_box.setText(token)
+        token_box.setMinimumWidth(420)
+        token_box.setMinimumHeight(80)
+        token_box.setStyleSheet(
+            """
+            QTextEdit {
+                font-family: Consolas, monospace;
+                font-size: 11pt;
+            }
+            """
+        )
+        layout.addWidget(token_box)
+
+        btns = QtWidgets.QHBoxLayout()
+        layout.addLayout(btns)
+
+        copy_btn = QtWidgets.QPushButton("Copy")
+        close_btn = QtWidgets.QPushButton("Close")
+
+        btns.addStretch(1)
+        btns.addWidget(copy_btn)
+        btns.addWidget(close_btn)
+
+        copy_btn.clicked.connect(
+            lambda: QtWidgets.QApplication.clipboard().setText(token)
+        )
+        close_btn.clicked.connect(dlg.close)
+
+        dlg.show()
+        dlg.raise_()
+        dlg.activateWindow()
+        dlg.setFocus()
+
+        # Double-raise to beat Windows focus restrictions (tray apps)
+        QtCore.QTimer.singleShot(
+            100,
+            lambda: (
+                dlg.raise_(),
+                dlg.activateWindow(),
+                dlg.setFocus(),
+                QtWidgets.QApplication.setActiveWindow(dlg),
+            ),
+        )
 
     # -------------------------
     # Menu building

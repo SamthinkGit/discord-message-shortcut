@@ -17,6 +17,7 @@ dependencies = [
     "pystray>=0.19.5",
     "pywin32>=311",
     "rich>=14.2.0",
+    "selenium>=4.39.0",
 ]
 
 [project.scripts]

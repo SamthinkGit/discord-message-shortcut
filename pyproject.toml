@@ -12,8 +12,10 @@ dependencies = [
     "keyboard>=0.13.5",
     "pillow>=12.0.0",
     "platformdirs>=4.5.1",
+    "pyinstaller>=6.17.0",
     "pyside6>=6.10.1",
     "pystray>=0.19.5",
+    "pywin32>=311",
     "rich>=14.2.0",
 ]
 

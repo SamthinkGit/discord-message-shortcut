@@ -17,7 +17,7 @@ The message is sent **automatically using your own Discord account**.
 
 ## 📦 Installation
 
-1. Go to the [Releases](https://github.com/SamthinkGit/discord-message-shortcut/releases/tag/1.0.0) page of this repository to download DMS and download `DiscordMessageShortcut.exe`
+1. Go to the [Releases](https://github.com/SamthinkGit/discord-message-shortcut/releases) page of this repository to download DMS and download `DiscordMessageShortcut.exe`
 
 ✅ Once started, **DMS will appear in the bottom-right system tray**
 
@@ -140,5 +140,6 @@ If you want, next steps could be:
 * UI themes
 
 Just say the word 😄
+
 
 

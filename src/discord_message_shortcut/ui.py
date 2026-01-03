@@ -1,5 +1,11 @@
 from __future__ import annotations
+import sys
 
+
+from discord_message_shortcut.fixes.fix_lock_screen import (
+    WindowsSessionEventFilter,
+    SessionNotificationWindow,
+)
 import os
 import threading
 import subprocess
@@ -153,6 +159,7 @@ class DmsUI(QtCore.QObject):
 
         self.active = False
         self._settings: Optional[SettingsDialog] = None
+        self._keyboard_dead = False
 
         self.fields: List[FieldSpec] = [
             FieldSpec("discord_token", "Discord Token", True),
@@ -174,6 +181,10 @@ class DmsUI(QtCore.QObject):
         # Whenever config changes, refresh everything (menu icons, tray badge, settings colors)
         self.configChanged.connect(self._refresh_everything)
 
+        self._session_filter = WindowsSessionEventFilter(self._on_session_lost)
+        self._app.installNativeEventFilter(self._session_filter)
+        self._session_window = SessionNotificationWindow(self._app)
+
         self._build_menu()
         self._tray.setContextMenu(self._menu)
         self._refresh_tray_icon()
@@ -189,6 +200,23 @@ class DmsUI(QtCore.QObject):
     # -------------------------
     # Settings window
     # -------------------------
+    def _on_session_lost(self) -> None:
+        if not self.active:
+            return
+
+        self.active = False
+        self._keyboard_dead = True
+        self._unbind_hotkey()
+
+        self.configChanged.emit()
+
+    def _restart_application(self) -> None:
+        """
+        This function requests a restart of the application.
+        It is used to recover keyboard functionality after a Windows session lock.
+        """
+        self.exit_app()
+        sys.exit(100)
 
     def open_settings(self) -> None:
         if self._settings is None:
@@ -237,7 +265,9 @@ class DmsUI(QtCore.QObject):
             self._error("DMS", "Received empty Discord token.")
             return
 
-        parent = self._settings if (self._settings and self._settings.isVisible()) else None
+        parent = (
+            self._settings if (self._settings and self._settings.isVisible()) else None
+        )
 
         # --- Custom dialog instead of QMessageBox ---
         dlg = QtWidgets.QDialog(parent)
@@ -444,6 +474,13 @@ class DmsUI(QtCore.QObject):
                 "Global hotkey backend not available.\n\nInstall:\n  pip install keyboard\n\n"
                 "Note: on some systems it may require admin privileges.",
             )
+            return
+
+        """
+        If the keyboard is dead because of a session lock, restart the application.
+        """
+        if self._keyboard_dead:
+            self._restart_application()
             return
 
         if not self.active:

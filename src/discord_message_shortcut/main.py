@@ -1,5 +1,6 @@
 import sys
 import os
+import multiprocessing
 
 
 def resource_path(relative_path: str) -> str:
@@ -11,13 +12,39 @@ def resource_path(relative_path: str) -> str:
     return os.path.join(os.path.abspath("."), relative_path)
 
 
-def main():
+def app_entry(autostart: bool = False) -> None:
     from discord_message_shortcut.ui import DmsUI
     from discord_message_shortcut.dms_manager import DMS_Manager
+    from discord_message_shortcut.main import resource_path
 
     manager = DMS_Manager(app_name="DMS")
     ui = DmsUI(manager=manager, icon_path=resource_path("resources/dms_icon.png"))
+    if autostart:
+        ui.toggle_active()
     ui.run()
+
+
+def main():
+    multiprocessing.set_start_method("spawn", force=True)
+    keyboard_fix_request = False
+
+    while True:
+        print("Starting DMS application...")
+        p = multiprocessing.Process(
+            target=app_entry, kwargs={"autostart": keyboard_fix_request}
+        )
+        p.start()
+        p.join()
+
+        # Exit codes:
+        # 0 = normal exit
+        # 100 = restart requested
+        if p.exitcode == 100:
+            print("Restarting DMS application to fix keyboard hook...")
+            keyboard_fix_request = True
+
+        if p.exitcode != 100:
+            break
 
 
 if __name__ == "__main__":

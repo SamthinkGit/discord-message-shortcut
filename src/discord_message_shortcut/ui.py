@@ -19,6 +19,8 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from discord_message_shortcut.dms_manager import DMS_Manager
 
+REQUEST_RESTART_EXIT_CODE = 9988
+
 
 @dataclass(frozen=True)
 class FieldSpec:
@@ -216,7 +218,7 @@ class DmsUI(QtCore.QObject):
         It is used to recover keyboard functionality after a Windows session lock.
         """
         self.exit_app()
-        sys.exit(100)
+        sys.exit(REQUEST_RESTART_EXIT_CODE)
 
     def open_settings(self) -> None:
         if self._settings is None:

@@ -1,6 +1,7 @@
 import sys
 import os
 import multiprocessing
+from discord_message_shortcut.ui import REQUEST_RESTART_EXIT_CODE
 
 
 def resource_path(relative_path: str) -> str:
@@ -29,21 +30,16 @@ def main():
     keyboard_fix_request = False
 
     while True:
-        print("Starting DMS application...")
         p = multiprocessing.Process(
             target=app_entry, kwargs={"autostart": keyboard_fix_request}
         )
         p.start()
         p.join()
 
-        # Exit codes:
-        # 0 = normal exit
-        # 100 = restart requested
-        if p.exitcode == 100:
-            print("Restarting DMS application to fix keyboard hook...")
+        if p.exitcode == REQUEST_RESTART_EXIT_CODE:
             keyboard_fix_request = True
 
-        if p.exitcode != 100:
+        if p.exitcode != REQUEST_RESTART_EXIT_CODE:
             break
 
 
@@ -54,7 +50,9 @@ if __name__ == "__main__":
     #
     # >> uv run discord_message_shortcut
     from pathlib import Path
-    import win32com.client  # pip install pywin32
+    import win32com.client
+
+    multiprocessing.freeze_support()
 
     def add_to_startup(app_name: str) -> None:
         startup_dir = (
